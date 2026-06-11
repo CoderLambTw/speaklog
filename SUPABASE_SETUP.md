@@ -33,6 +33,10 @@ create policy "insert own data" on public.user_data
 create policy "update own data" on public.user_data
   for update using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- 新版 Supabase 專案不會自動授權,要明確 GRANT 給登入後的角色
+-- (匿名 anon 不給權限 — 本來就只有登入後才需要碰這張表)
+grant select, insert, update on public.user_data to authenticated;
 ```
 
 ## 3. 設定 Google OAuth

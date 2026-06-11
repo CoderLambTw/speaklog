@@ -11,8 +11,8 @@
              本機任何變更 → 3.5 秒 debounce 後自動上傳
    ============================================================ */
 const Sync = (() => {
-  const SUPABASE_URL = 'YOUR_SUPABASE_URL';            // 例:https://abcd1234.supabase.co
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';  // 例:eyJhbGciOi...
+  const SUPABASE_URL = 'https://lqpqwevpxedqizjfnhpg.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_r1pa4hKpnBXAf8hCgskb6A_BYJDNzgW'; // publishable key,公開安全
 
   let client = null;
   let user = null;
