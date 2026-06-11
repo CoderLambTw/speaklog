@@ -700,9 +700,11 @@ You did a wonderful job expressing your opinions today!`;
         <button class="btn primary" id="set-save">儲存設定</button>
       </div>
       <div class="spacer"></div>
+      <div class="card" id="sync-card">${syncCardHtml()}</div>
+      <div class="spacer"></div>
       <div class="card">
-        <h3>💾 資料備份</h3>
-        <p class="hint">所有資料都存在這台裝置的瀏覽器(localStorage)。換裝置或清瀏覽器前,記得先匯出備份。</p>
+        <h3>💾 手動備份</h3>
+        <p class="hint">${Sync.enabled() ? '已開啟雲端同步,匯出檔案可作為額外保險。' : '所有資料都存在這台裝置的瀏覽器(localStorage)。換裝置或清瀏覽器前,記得先匯出備份。'}</p>
         <div class="btn-row mt">
           <button class="btn" id="exp-btn">⬇️ 匯出 JSON</button>
           <button class="btn" id="imp-btn">⬆️ 匯入 JSON</button>
@@ -719,6 +721,7 @@ You did a wonderful job expressing your opinions today!`;
       <p class="faint" style="font-size:12px;text-align:center">SpeakLog · 為 Winning Plus 一對一口說課設計的學習引擎<br>純前端 · 零追蹤 · 資料只屬於你</p>
     </div>`;
 
+    bindSyncCard(root);
     $('#set-save', root).addEventListener('click', () => {
       s.meta.name = $('#set-name', root).value.trim();
       s.meta.theme = $('#set-theme', root).value;
@@ -759,6 +762,61 @@ You did a wonderful job expressing your opinions today!`;
         App.toast('已清除所有資料');
         App.applyTheme();
         location.hash = '#/';
+        App.refresh();
+      });
+    });
+  }
+
+  /* ---------- 雲端同步卡片(Supabase + Google 登入) ---------- */
+  function syncCardHtml() {
+    if (!Sync.configured()) {
+      return `<h3>☁️ 跨裝置同步</h3>
+        <p class="hint">尚未啟用 — 部署者需建立 Supabase 專案並填入金鑰,
+        詳見 repo 內的 <a href="https://github.com/CoderLambTw/speaklog/blob/main/SUPABASE_SETUP.md" target="_blank" rel="noopener">SUPABASE_SETUP.md</a>。
+        在那之前,可用下方的手動備份在裝置間搬資料。</p>`;
+    }
+    if (!Sync.enabled()) {
+      return `<h3>☁️ 跨裝置同步</h3>
+        <p class="hint">用 Google 帳號登入後,資料會自動同步到雲端:手機複習完,電腦打開就是最新進度。未登入也能照常使用,資料留在本機。</p>
+        <button class="btn primary" id="sync-login">🔐 使用 Google 登入並同步</button>`;
+    }
+    const u = Sync.getUser();
+    const last = Store.state.meta.sync.lastSync
+      ? new Date(Store.state.meta.sync.lastSync).toLocaleString('zh-TW', { hour12: false }) : '—';
+    return `<h3>☁️ 跨裝置同步 <span class="pill review">已同步</span></h3>
+      <p class="hint">${esc(u.email || u.id)} · 上次同步:${last}<br>
+      變更後約 3 秒自動上傳;開啟 App、回到前景或重新上線時自動同步。其他裝置用同一個 Google 帳號登入即可。</p>
+      <div class="btn-row">
+        <button class="btn" id="sync-now">🔄 立即同步</button>
+        <button class="btn danger" id="sync-logout">登出</button>
+      </div>`;
+  }
+
+  function bindSyncCard(root) {
+    const card = $('#sync-card', root);
+    if (!card) return;
+    $('#sync-login', card)?.addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      e.target.textContent = '前往 Google 登入…';
+      try { await Sync.signIn(); }  // 成功會整頁導向 Google
+      catch (err) {
+        App.toast('❌ ' + err.message, { ms: 4500 });
+        e.target.disabled = false;
+        e.target.textContent = '🔐 使用 Google 登入並同步';
+      }
+    });
+    $('#sync-now', card)?.addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      try {
+        const r = await Sync.syncNow();
+        App.toast(r.status === 'pulled' ? '☁️ 已下載雲端資料' : r.status === 'pushed' ? '☁️ 已上傳本機資料' : '✅ 已是最新狀態');
+        App.refresh();
+      } catch (err) { App.toast('❌ ' + err.message, { ms: 4000 }); e.target.disabled = false; }
+    });
+    $('#sync-logout', card)?.addEventListener('click', () => {
+      App.confirm('登出雲端同步?', '本機資料保留,雲端資料也不會刪除,重新登入即可繼續同步。', async () => {
+        await Sync.signOut();
+        App.toast('已登出');
         App.refresh();
       });
     });

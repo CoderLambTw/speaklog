@@ -52,6 +52,8 @@ const Store = (() => {
         xp: 0, ach: [], activity: {},   // 'YYYY-MM-DD' -> {lesson, review, pron}
         reviewLog: [],                   // [{date, total, correct}] 每日彙總
         theme: 'dark', newPerDay: 8, name: '', nightOwl: false, sampleLoaded: false,
+        lastModified: 0,
+        sync: { lastSync: null },   // 裝置本地的同步狀態,不會上傳
       },
     };
   }
@@ -63,10 +65,25 @@ const Store = (() => {
       if (!raw) return defaults();
       const s = JSON.parse(raw);
       const d = defaults();
-      return { ...d, ...s, meta: { ...d.meta, ...(s.meta || {}) } };
+      return { ...d, ...s, meta: { ...d.meta, ...(s.meta || {}), sync: { ...d.meta.sync, ...((s.meta || {}).sync || {}) } } };
     } catch (e) { console.warn('load failed', e); return defaults(); }
   }
-  function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+  /** 寫入 localStorage,不更新時間戳、不觸發同步(供同步引擎內部使用) */
+  function persist() { localStorage.setItem(KEY, JSON.stringify(state)); }
+  /** 一般儲存:更新時間戳 + 排程雲端上傳
+      取 max(現在, 既有時間戳+1) 保證單調遞增 — 避免裝置時鐘偏差時,
+      剛拉下來的雲端資料時間戳比本機時鐘快,導致後續本機編輯被誤判為舊資料 */
+  function save() {
+    state.meta.lastModified = Math.max(Date.now(), (state.meta.lastModified || 0) + 1);
+    persist();
+    if (typeof Sync !== 'undefined') Sync.schedulePush();
+  }
+  /** 整包替換(雲端拉取/匯入備份用),保留傳入資料的時間戳 */
+  function replace(s) {
+    const d = defaults();
+    state = { ...d, ...s, meta: { ...d.meta, ...(s.meta || {}), sync: { ...d.meta.sync, ...((s.meta || {}).sync || {}) } } };
+    persist();
+  }
 
   const wordKey = (w) => w.toLowerCase().replace(/[^a-z' -]/g, '').trim();
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -318,9 +335,8 @@ const Store = (() => {
   function importJson(text) {
     const s = JSON.parse(text);
     if (!Array.isArray(s.lessons)) throw new Error('格式不正確:缺少 lessons');
-    const d = defaults();
-    state = { ...d, ...s, meta: { ...d.meta, ...(s.meta || {}) } };
-    save();
+    replace(s);
+    save();   // 視為新變更,登入時會自動上傳到雲端
   }
   function reset() { state = defaults(); save(); }
 
@@ -413,7 +429,7 @@ const Store = (() => {
 
   return {
     get state() { return state; },
-    save, wordKey, levelInfo, ACHIEVEMENTS,
+    save, persist, replace, wordKey, levelInfo, ACHIEVEMENTS,
     addLesson, deleteLesson,
     vocabIndex, grammarIndex, pronIndex,
     dueCards, gradeVocab, gradeGrammar, logPron, totalReviews,

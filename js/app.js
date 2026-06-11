@@ -76,7 +76,7 @@ const App = (() => {
           <span class="ico">${r.icon}</span>${r.label}
           ${r.badge && dueCount ? `<span class="nav-badge">${dueCount > 99 ? '99+' : dueCount}</span>` : ''}
         </a>`).join('')}
-      <div class="sidebar-foot">資料只存在這台裝置<br>記得定期匯出備份 💾</div>`;
+      <div class="sidebar-foot">${Sync.enabled() ? '☁️ 雲端同步已開啟' : Sync.configured() ? '資料目前只存在這台裝置<br>可到設定登入 Google 同步 ☁️' : '資料只存在這台裝置<br>記得定期匯出備份 💾'}</div>`;
 
     const bnavRoutes = [
       ROUTES[0], ROUTES[1], ROUTES[2], ROUTES[3],
@@ -148,6 +148,22 @@ const App = (() => {
     if ('speechSynthesis' in window) speechSynthesis.getVoices(); // 預載語音清單
     window.addEventListener('hashchange', route);
     route();
+
+    // 雲端同步:先顯示本機資料,背景初始化/拉取,有更新再重繪
+    const onSync = (r) => {
+      if (!r) return;
+      if (r.status === 'pulled') { applyTheme(); refresh(); toast('☁️ 已同步雲端資料'); }
+      else if (r.status === 'pushed') { refresh(); toast('☁️ 已上傳本機資料'); }
+      else if (r.status === 'signedout') refresh();
+      else if (r.status === 'error') toast('⚠️ 同步失敗:' + r.message + '(使用本機資料)', { ms: 4000 });
+    };
+    Sync.init(onSync).then(onSync).catch((e) => console.warn('[sync] init 失敗:', e.message));
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) Sync.flush();
+      else Sync.maybePull().then((r) => {
+        if (r && r.status === 'pulled') { applyTheme(); refresh(); toast('☁️ 已同步雲端資料'); }
+      }).catch(() => {});
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);
