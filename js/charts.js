@@ -34,7 +34,8 @@ const Charts = (() => {
         xlabels += `<text x="${x(i).toFixed(1)}" y="${H - 8}" font-size="10" fill="currentColor" fill-opacity="0.45" text-anchor="middle">${p.x}</text>`;
       }
     });
-    const dots = points.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.y).toFixed(1)}" r="3" fill="${color2}"/>`).join('');
+    // 折線逐步繪出,圓點跟著線的進度浮現
+    const dots = points.map((p, i) => `<circle class="line-dot" style="animation-delay:${(0.15 + (i / Math.max(points.length - 1, 1)) * 1.1).toFixed(2)}s" cx="${x(i).toFixed(1)}" cy="${y(p.y).toFixed(1)}" r="3" fill="${color2}"/>`).join('');
 
     return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
       <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
@@ -42,8 +43,8 @@ const Charts = (() => {
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
       </linearGradient></defs>
       ${grid}
-      <path d="${area}" fill="url(#${gid})"/>
-      <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
+      <path class="line-area" d="${area}" fill="url(#${gid})"/>
+      <path class="line-path" pathLength="1" d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>
       ${dots}${xlabels}
     </svg>`;
   }
@@ -52,10 +53,10 @@ const Charts = (() => {
   function hbars(items, { max = null } = {}) {
     if (!items.length) return '<div class="faint" style="text-align:center;padding:20px 0">尚無資料</div>';
     const m = max || Math.max(...items.map((i) => i.value), 1);
-    return items.map((it) => `
+    return items.map((it, i) => `
       <div class="hbar-row">
         <span class="lbl">${it.label}</span>
-        <div class="hbar-track"><div class="hbar-fill" style="width:${Math.round((it.value / m) * 100)}%;background:${it.color || 'var(--accent)'}"></div></div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${Math.round((it.value / m) * 100)}%;background:${it.color || 'var(--accent)'};animation-delay:${i * 70}ms"></div></div>
         <span class="hbar-val">${it.value}${it.suffix || ''}</span>
       </div>`).join('');
   }

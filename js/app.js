@@ -3,16 +3,16 @@
    ============================================================ */
 const App = (() => {
   const ROUTES = [
-    { path: 'dashboard', hash: '#/', icon: '🏠', label: '總覽', view: Views.dashboard, nav: true, bnav: true },
-    { path: 'review', hash: '#/review', icon: '🃏', label: '複習', view: Views.review, nav: true, bnav: true, badge: true },
-    { path: 'add', hash: '#/add', icon: '＋', label: '新增', view: Views.add, nav: true, bnav: 'add' },
-    { path: 'vocab', hash: '#/vocab', icon: '📖', label: '單字庫', view: Views.vocab, nav: true, bnav: true },
-    { path: 'grammar', hash: '#/grammar', icon: '🎯', label: '文法雷達', view: Views.grammar, nav: true },
-    { path: 'pron', hash: '#/pron', icon: '🎙️', label: '發音練習', view: Views.pron, nav: true },
-    { path: 'lessons', hash: '#/lessons', icon: '📚', label: '課程紀錄', view: Views.lessons, nav: true },
-    { path: 'progress', hash: '#/progress', icon: '📈', label: '成長軌跡', view: Views.progress, nav: true },
-    { path: 'settings', hash: '#/settings', icon: '⚙️', label: '設定', view: Views.settings, nav: true },
-    { path: 'more', hash: '#/more', icon: '☰', label: '更多', view: Views.more, nav: false },
+    { path: 'dashboard', hash: '#/', icon: 'home', label: '總覽', view: Views.dashboard, nav: true, bnav: true },
+    { path: 'review', hash: '#/review', icon: 'layers', label: '複習', view: Views.review, nav: true, bnav: true, badge: true },
+    { path: 'add', hash: '#/add', icon: 'plus', label: '新增', view: Views.add, nav: true, bnav: 'add' },
+    { path: 'vocab', hash: '#/vocab', icon: 'book-open', label: '單字庫', view: Views.vocab, nav: true, bnav: true },
+    { path: 'grammar', hash: '#/grammar', icon: 'target', label: '文法雷達', view: Views.grammar, nav: true },
+    { path: 'pron', hash: '#/pron', icon: 'mic', label: '發音練習', view: Views.pron, nav: true },
+    { path: 'lessons', hash: '#/lessons', icon: 'library', label: '課程紀錄', view: Views.lessons, nav: true },
+    { path: 'progress', hash: '#/progress', icon: 'trending-up', label: '成長軌跡', view: Views.progress, nav: true },
+    { path: 'settings', hash: '#/settings', icon: 'sliders', label: '設定', view: Views.settings, nav: true },
+    { path: 'more', hash: '#/more', icon: 'menu', label: '更多', view: Views.more, nav: false },
   ];
 
   const main = document.getElementById('main');
@@ -71,10 +71,10 @@ const App = (() => {
     const dueCount = Store.dueCards().length;
 
     document.getElementById('sidebar').innerHTML = `
-      <div class="brand"><div class="logo">🗣️</div><div>SpeakLog<small>口說成長引擎</small></div></div>
+      <div class="brand"><div class="logo">${Icons.svg('audio-lines', 19)}</div><div>SpeakLog<small>口說成長引擎</small></div></div>
       ${ROUTES.filter((r) => r.nav).map((r) => `
         <a class="navlink${active === r.path || (active === 'lesson' && r.path === 'lessons') ? ' active' : ''}" href="${r.hash}">
-          <span class="ico">${r.icon}</span>${r.label}
+          <span class="ico">${Icons.svg(r.icon, 18)}</span>${r.label}
           ${r.badge && dueCount ? `<span class="nav-badge">${dueCount > 99 ? '99+' : dueCount}</span>` : ''}
         </a>`).join('')}
       <div class="sidebar-foot">${Sync.enabled() ? '☁️ 雲端同步已開啟' : Sync.configured() ? '資料目前只存在這台裝置<br>可到設定登入 Google 同步 ☁️' : '資料只存在這台裝置<br>記得定期匯出備份 💾'}</div>`;
@@ -82,12 +82,12 @@ const App = (() => {
     const moreActive = ['more', 'grammar', 'pron', 'lessons', 'lesson', 'progress', 'settings'].includes(active);
     const bnavRoutes = [
       ROUTES[0], ROUTES[1], ROUTES[2], ROUTES[3],
-      { path: 'more', hash: '#/more', icon: '☰', label: '更多' },
+      { path: 'more', hash: '#/more', icon: 'menu', label: '更多' },
     ];
     document.getElementById('bottomnav').innerHTML = `<div class="inner">
       ${bnavRoutes.map((r) => `
         <a class="bnav${r.bnav === 'add' ? ' bnav-add' : ''}${active === r.path || (r.path === 'more' && moreActive) ? ' active' : ''}" href="${r.hash}">
-          <span class="ico">${r.icon}</span><span>${r.label}</span>
+          <span class="ico">${Icons.svg(r.icon, r.bnav === 'add' ? 22 : 20)}</span><span>${r.label}</span>
           ${r.badge && dueCount ? `<span class="nav-badge">${dueCount > 99 ? '99+' : dueCount}</span>` : ''}
         </a>`).join('')}
     </div>`;
@@ -141,7 +141,7 @@ const App = (() => {
   function applyTheme() {
     document.documentElement.dataset.theme = Store.state.meta.theme || 'dark';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content',
-      Store.state.meta.theme === 'light' ? '#f3f5fb' : '#0b1020');
+      Store.state.meta.theme === 'light' ? '#f2f4fb' : '#060a16');
   }
 
   /* ---------- 啟動 ---------- */
