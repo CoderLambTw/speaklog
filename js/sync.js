@@ -94,6 +94,11 @@ const Sync = (() => {
       const localTs = Store.state.meta.lastModified || 0;
       const remoteTs = (remote && remote.meta && remote.meta.lastModified) || 0;
 
+      // 安全閥:本機完全沒有課程而雲端有 → 一律拉取。
+      // 避免新裝置(或剛清除資料的裝置)時間戳較新時,把空資料推上去蓋掉雲端。
+      const remoteLessons = (remote && Array.isArray(remote.lessons) && remote.lessons.length) || 0;
+      if (!Store.state.lessons.length && remoteLessons > 0) { applyRemote(remote); return { status: 'pulled' }; }
+
       if (!remote || remoteTs < localTs) { await push(); return { status: 'pushed' }; }
       if (remoteTs > localTs) { applyRemote(remote); return { status: 'pulled' }; }
       touchLastSync();
