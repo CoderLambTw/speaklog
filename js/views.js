@@ -822,6 +822,27 @@ You did a wonderful job expressing your opinions today!`;
     });
   }
 
+  /* ============================================================
+     更多(手機版選單)
+     ============================================================ */
+  function more(root) {
+    const items = [
+      ['#/grammar', '🎯', '文法雷達', '反覆犯錯模式分析'],
+      ['#/pron', '🎙️', '發音練習室', 'TTS 播放與錄音挑戰'],
+      ['#/lessons', '📚', '課程紀錄', '每堂課詳情與老師回饋'],
+      ['#/progress', '📈', '成長軌跡', '圖表、成就、等級'],
+      ['#/settings', '⚙️', '設定', '同步、備份、主題'],
+    ];
+    root.innerHTML = `<div class="page" style="max-width:560px">
+      <div class="page-head"><div><h1>☰ 更多</h1></div></div>
+      <div class="grid">${items.map(([href, ico, label, desc]) => `
+        <a class="card clickable" href="${href}" style="text-decoration:none;color:inherit;display:flex;gap:14px;align-items:center">
+          <div style="font-size:26px">${ico}</div>
+          <div><b style="font-size:15.5px">${label}</b><div class="hint">${desc}</div></div>
+        </a>`).join('')}</div>
+    </div>`;
+  }
+
   /* ---------- 通用空狀態 ---------- */
   function emptyRedirect(root, title, body) {
     root.innerHTML = `<div class="page"><div class="empty">
@@ -830,5 +851,5 @@ You did a wonderful job expressing your opinions today!`;
     </div></div>`;
   }
 
-  return { dashboard, add, lessons, lessonDetail, vocab, review, grammar, pron, progress, settings };
+  return { dashboard, add, lessons, lessonDetail, vocab, review, grammar, pron, progress, settings, more };
 })();

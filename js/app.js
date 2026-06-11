@@ -12,6 +12,7 @@ const App = (() => {
     { path: 'lessons', hash: '#/lessons', icon: '📚', label: '課程紀錄', view: Views.lessons, nav: true },
     { path: 'progress', hash: '#/progress', icon: '📈', label: '成長軌跡', view: Views.progress, nav: true },
     { path: 'settings', hash: '#/settings', icon: '⚙️', label: '設定', view: Views.settings, nav: true },
+    { path: 'more', hash: '#/more', icon: '☰', label: '更多', view: Views.more, nav: false },
   ];
 
   const main = document.getElementById('main');
@@ -78,13 +79,14 @@ const App = (() => {
         </a>`).join('')}
       <div class="sidebar-foot">${Sync.enabled() ? '☁️ 雲端同步已開啟' : Sync.configured() ? '資料目前只存在這台裝置<br>可到設定登入 Google 同步 ☁️' : '資料只存在這台裝置<br>記得定期匯出備份 💾'}</div>`;
 
+    const moreActive = ['more', 'grammar', 'pron', 'lessons', 'lesson', 'progress', 'settings'].includes(active);
     const bnavRoutes = [
       ROUTES[0], ROUTES[1], ROUTES[2], ROUTES[3],
-      { path: 'progress', hash: '#/progress', icon: '📈', label: '成長' },
+      { path: 'more', hash: '#/more', icon: '☰', label: '更多' },
     ];
     document.getElementById('bottomnav').innerHTML = `<div class="inner">
       ${bnavRoutes.map((r) => `
-        <a class="bnav${r.bnav === 'add' ? ' bnav-add' : ''}${active === r.path ? ' active' : ''}" href="${r.hash}">
+        <a class="bnav${r.bnav === 'add' ? ' bnav-add' : ''}${active === r.path || (r.path === 'more' && moreActive) ? ' active' : ''}" href="${r.hash}">
           <span class="ico">${r.icon}</span><span>${r.label}</span>
           ${r.badge && dueCount ? `<span class="nav-badge">${dueCount > 99 ? '99+' : dueCount}</span>` : ''}
         </a>`).join('')}
