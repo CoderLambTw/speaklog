@@ -244,19 +244,19 @@ You did a wonderful job expressing your opinions today!`;
       if (!$('#edit-teacher', el)) return;
       data.teacher = $('#edit-teacher', el).value.trim();
       data.feedback = $('#edit-feedback', el).value.trim();
-      $$('#vocab-list .edit-row', el).forEach((row, i) => {
+      $$('#vocab-list .edit-item', el).forEach((row, i) => {
         if (data.vocab[i]) {
           data.vocab[i].word = row.querySelector('.edit-word').value.trim();
           data.vocab[i].def = row.querySelector('.edit-def').value.trim();
         }
       });
-      $$('#grammar-list .edit-row', el).forEach((row, i) => {
+      $$('#grammar-list .edit-item', el).forEach((row, i) => {
         if (data.grammar[i]) {
           data.grammar[i].wrong = row.querySelector('.edit-wrong').value.trim();
           data.grammar[i].correct = row.querySelector('.edit-correct').value.trim();
         }
       });
-      $$('#pron-list .edit-row', el).forEach((row, i) => {
+      $$('#pron-list .edit-item', el).forEach((row, i) => {
         if (data.pron[i]) {
           data.pron[i].word = row.querySelector('.edit-word').value.trim();
           data.pron[i].guide = row.querySelector('.edit-def').value.trim();
@@ -264,61 +264,91 @@ You did a wonderful job expressing your opinions today!`;
       });
     }
 
+    const vocabRow = (v, i) => `<div class="edit-item" data-idx="${i}" data-type="vocab">
+      <div class="edit-item-fields">
+        <div class="edit-item-f" style="flex:0 0 140px">
+          <span class="edit-lbl">單字</span>
+          <input class="edit-word" placeholder="word" value="${esc(v.word)}">
+        </div>
+        <span class="edit-sep">—</span>
+        <div class="edit-item-f grow">
+          <span class="edit-lbl">定義</span>
+          <input class="edit-def" placeholder="definition" value="${esc(v.def)}">
+        </div>
+      </div>
+      <button class="iconbtn del-row edit-del" title="刪除">${I('x', 14)}</button>
+    </div>`;
+
+    const grammarRow = (g, i) => `<div class="edit-item" data-idx="${i}" data-type="grammar">
+      <div class="edit-item-fields col">
+        <div class="edit-item-f">
+          <span class="edit-lbl bad">${I('circle-x', 11)} 錯誤句</span>
+          <input class="edit-wrong" placeholder="錯誤的說法…" value="${esc(g.wrong)}">
+        </div>
+        <div class="edit-item-f">
+          <span class="edit-lbl good">${I('circle-check', 11)} 修正句</span>
+          <input class="edit-correct" placeholder="正確的說法…" value="${esc(g.correct)}">
+        </div>
+      </div>
+      <button class="iconbtn del-row edit-del" title="刪除">${I('x', 14)}</button>
+    </div>`;
+
+    const pronRow = (p, i) => `<div class="edit-item" data-idx="${i}" data-type="pron">
+      <div class="edit-item-fields">
+        <div class="edit-item-f" style="flex:0 0 140px">
+          <span class="edit-lbl">單字</span>
+          <input class="edit-word" placeholder="word" value="${esc(p.word)}">
+        </div>
+        <span class="edit-sep">→</span>
+        <div class="edit-item-f grow">
+          <span class="edit-lbl">音標 / 提示</span>
+          <input class="edit-def" placeholder='"rih-ZIL-yent"' value="${esc(p.guide)}">
+        </div>
+      </div>
+      <button class="iconbtn del-row edit-del" title="刪除">${I('x', 14)}</button>
+    </div>`;
+
     function render(scrollInto) {
       const total = data.vocab.length + data.grammar.length + data.pron.length;
       el.innerHTML = `<div class="spacer"></div><div class="card">
-        <div class="flex between" style="align-items:baseline;margin-bottom:14px">
+        <div class="flex between" style="align-items:baseline;margin-bottom:16px">
           <h3 style="margin:0">解析結果</h3>
-          <span class="hint" style="font-size:12.5px">可直接修改後再儲存</span>
+          <span style="font-size:12px;color:var(--text-faint)">${I('pencil', 11)} 可直接修改後再儲存</span>
         </div>
         ${data.warnings.length ? `<div class="warn-box">⚠️ ${data.warnings.map(esc).join('<br>⚠️ ')}</div>` : ''}
 
         <div class="preview-sec">
           <div class="sec-title">${I('user', 14)} 老師</div>
-          <input class="edit-field" id="edit-teacher" placeholder="老師名字" value="${esc(data.teacher || '')}">
+          <input id="edit-teacher" placeholder="老師名字" value="${esc(data.teacher || '')}">
         </div>
 
         <div class="preview-sec">
           <div class="sec-title">${I('book-open', 14, 'c-good')} 單字 <span class="cnt">${data.vocab.length}</span></div>
           <div id="vocab-list">
-            ${data.vocab.map((v, i) => `<div class="edit-row" data-idx="${i}" data-type="vocab">
-              <input class="edit-word" placeholder="單字" value="${esc(v.word)}">
-              <input class="edit-def" placeholder="定義" value="${esc(v.def)}">
-              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
-            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+            ${data.vocab.map(vocabRow).join('') || '<p class="faint" style="font-size:13px;margin:4px 0 8px">無</p>'}
           </div>
-          <button class="btn sm" id="add-vocab">${I('plus', 13)} 加單字</button>
+          <button class="btn ghost sm edit-add-btn" id="add-vocab">${I('plus', 13)} 加單字</button>
         </div>
 
         <div class="preview-sec">
           <div class="sec-title">${I('pencil', 14, 'c-warn')} 文法修正 <span class="cnt">${data.grammar.length}</span></div>
           <div id="grammar-list">
-            ${data.grammar.map((g, i) => `<div class="edit-row grammar-row" data-idx="${i}" data-type="grammar">
-              <div class="grammar-inputs">
-                <input class="edit-wrong" placeholder="❌ 錯誤句" value="${esc(g.wrong)}">
-                <input class="edit-correct" placeholder="✔️ 修正句" value="${esc(g.correct)}">
-              </div>
-              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
-            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+            ${data.grammar.map(grammarRow).join('') || '<p class="faint" style="font-size:13px;margin:4px 0 8px">無</p>'}
           </div>
-          <button class="btn sm" id="add-grammar">${I('plus', 13)} 加文法</button>
+          <button class="btn ghost sm edit-add-btn" id="add-grammar">${I('plus', 13)} 加文法</button>
         </div>
 
         <div class="preview-sec">
           <div class="sec-title">${I('megaphone', 14, 'c-acc2')} 發音 <span class="cnt">${data.pron.length}</span></div>
           <div id="pron-list">
-            ${data.pron.map((p, i) => `<div class="edit-row" data-idx="${i}" data-type="pron">
-              <input class="edit-word" placeholder="單字" value="${esc(p.word)}">
-              <input class="edit-def" placeholder="音標/提示" value="${esc(p.guide)}">
-              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
-            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+            ${data.pron.map(pronRow).join('') || '<p class="faint" style="font-size:13px;margin:4px 0 8px">無</p>'}
           </div>
-          <button class="btn sm" id="add-pron">${I('plus', 13)} 加發音</button>
+          <button class="btn ghost sm edit-add-btn" id="add-pron">${I('plus', 13)} 加發音</button>
         </div>
 
-        <div class="preview-sec">
+        <div class="preview-sec" style="margin-bottom:20px">
           <div class="sec-title">${I('message-circle', 14)} 老師回饋</div>
-          <textarea id="edit-feedback" class="edit-feedback-area">${esc(data.feedback || '')}</textarea>
+          <textarea id="edit-feedback" style="min-height:90px;font-size:14px">${esc(data.feedback || '')}</textarea>
         </div>
 
         <button class="btn primary block lg" id="save-btn" ${total === 0 && !data.feedback ? 'disabled' : ''}>${I('save', 16)} 儲存這堂課(+30 XP)</button>
