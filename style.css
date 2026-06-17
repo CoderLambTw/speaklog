@@ -821,13 +821,24 @@ kbd {
 .empty p { color: var(--text-dim); font-size: 14.5px; max-width: 380px; margin: 0 auto 22px; }
 
 /* ---------- 解析預覽 ---------- */
-.preview-sec { margin-bottom: 14px; }
+.preview-sec { margin-bottom: 18px; }
 .preview-sec .sec-title { font-size: 13px; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
 .preview-sec .sec-title .cnt { background: var(--info-bg); color: var(--accent); border-radius: 99px; padding: 1px 9px; font-size: 11.5px; }
 .pv-item { padding: 8px 12px; background: var(--bg-soft); border-radius: 10px; margin-bottom: 6px; font-size: 13.5px; }
 .pv-item b { font-weight: 700; }
 .pv-item .def { color: var(--text-dim); }
 .warn-box { background: var(--warn-bg); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 12px 15px; font-size: 13px; margin-bottom: 12px; }
+/* 可編輯預覽 */
+.edit-field { width: 100%; box-sizing: border-box; }
+.edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.edit-row .edit-word { flex: 0 0 160px; min-width: 80px; }
+.edit-row .edit-def { flex: 1; }
+.edit-row .del-row { flex-shrink: 0; }
+.grammar-row { align-items: flex-start; }
+.grammar-inputs { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.grammar-inputs input { width: 100%; box-sizing: border-box; }
+.edit-feedback-area { width: 100%; box-sizing: border-box; min-height: 100px; resize: vertical; }
+@media (max-width: 480px) { .edit-row .edit-word { flex: 0 0 110px; } }
 
 /* ---------- Misc ---------- */
 .muted { color: var(--text-dim); }

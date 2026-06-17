@@ -238,28 +238,118 @@ You did a wonderful job expressing your opinions today!`;
   }
 
   function renderPreview(el, parsed, dateInput) {
-    const total = parsed.vocab.length + parsed.grammar.length + parsed.pron.length;
-    el.innerHTML = `<div class="spacer"></div><div class="card">
-      <h3>解析結果預覽</h3>
-      ${parsed.warnings.length ? `<div class="warn-box">⚠️ ${parsed.warnings.map(esc).join('<br>⚠️ ')}</div>` : ''}
-      <div class="preview-sec"><div class="sec-title">${I('user', 14)} 老師</div><div class="pv-item"><b>${esc(parsed.teacher || '(未偵測到)')}</b></div></div>
-      <div class="preview-sec"><div class="sec-title">${I('book-open', 14, 'c-good')} 單字 <span class="cnt">${parsed.vocab.length}</span></div>
-        ${parsed.vocab.map((v) => `<div class="pv-item"><b>${esc(v.word)}</b> <span class="def">— ${esc(v.def || '(無定義)')}</span></div>`).join('') || '<div class="pv-item faint">無</div>'}</div>
-      <div class="preview-sec"><div class="sec-title">${I('pencil', 14, 'c-warn')} 文法修正 <span class="cnt">${parsed.grammar.length}</span></div>
-        ${parsed.grammar.map((g) => grammarPairHtml({ ...g, cats: Grammar.classify(g.wrong, g.correct) })).join('') || '<div class="pv-item faint">無</div>'}</div>
-      <div class="preview-sec"><div class="sec-title">${I('megaphone', 14, 'c-acc2')} 發音 <span class="cnt">${parsed.pron.length}</span></div>
-        ${parsed.pron.map((p) => `<div class="pv-item"><b>${esc(p.word)}</b> <span class="def">${esc(p.guide)}</span></div>`).join('') || '<div class="pv-item faint">無</div>'}</div>
-      <div class="preview-sec"><div class="sec-title">${I('message-circle', 14)} 老師回饋</div><div class="pv-item" style="white-space:pre-wrap">${esc(parsed.feedback || '(無)')}</div></div>
-      <button class="btn primary block lg" id="save-btn" ${total === 0 && !parsed.feedback ? 'disabled' : ''}>${I('save', 16)} 儲存這堂課(+30 XP)</button>
-    </div>`;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    $('#save-btn', el)?.addEventListener('click', () => {
-      const date = dateInput.value || SRS.todayStr();
-      const { lesson, newAch } = Store.addLesson(date, parsed);
-      App.toast('✅ 已儲存!+30 XP');
-      newAch.forEach((a) => App.achToast(a));
-      location.hash = `#/lesson/${lesson.id}`;
-    });
+    const data = JSON.parse(JSON.stringify(parsed));
+
+    function readDOM() {
+      if (!$('#edit-teacher', el)) return;
+      data.teacher = $('#edit-teacher', el).value.trim();
+      data.feedback = $('#edit-feedback', el).value.trim();
+      $$('#vocab-list .edit-row', el).forEach((row, i) => {
+        if (data.vocab[i]) {
+          data.vocab[i].word = row.querySelector('.edit-word').value.trim();
+          data.vocab[i].def = row.querySelector('.edit-def').value.trim();
+        }
+      });
+      $$('#grammar-list .edit-row', el).forEach((row, i) => {
+        if (data.grammar[i]) {
+          data.grammar[i].wrong = row.querySelector('.edit-wrong').value.trim();
+          data.grammar[i].correct = row.querySelector('.edit-correct').value.trim();
+        }
+      });
+      $$('#pron-list .edit-row', el).forEach((row, i) => {
+        if (data.pron[i]) {
+          data.pron[i].word = row.querySelector('.edit-word').value.trim();
+          data.pron[i].guide = row.querySelector('.edit-def').value.trim();
+        }
+      });
+    }
+
+    function render(scrollInto) {
+      const total = data.vocab.length + data.grammar.length + data.pron.length;
+      el.innerHTML = `<div class="spacer"></div><div class="card">
+        <div class="flex between" style="align-items:baseline;margin-bottom:14px">
+          <h3 style="margin:0">解析結果</h3>
+          <span class="hint" style="font-size:12.5px">可直接修改後再儲存</span>
+        </div>
+        ${data.warnings.length ? `<div class="warn-box">⚠️ ${data.warnings.map(esc).join('<br>⚠️ ')}</div>` : ''}
+
+        <div class="preview-sec">
+          <div class="sec-title">${I('user', 14)} 老師</div>
+          <input class="edit-field" id="edit-teacher" placeholder="老師名字" value="${esc(data.teacher || '')}">
+        </div>
+
+        <div class="preview-sec">
+          <div class="sec-title">${I('book-open', 14, 'c-good')} 單字 <span class="cnt">${data.vocab.length}</span></div>
+          <div id="vocab-list">
+            ${data.vocab.map((v, i) => `<div class="edit-row" data-idx="${i}" data-type="vocab">
+              <input class="edit-word" placeholder="單字" value="${esc(v.word)}">
+              <input class="edit-def" placeholder="定義" value="${esc(v.def)}">
+              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
+            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+          </div>
+          <button class="btn sm" id="add-vocab">${I('plus', 13)} 加單字</button>
+        </div>
+
+        <div class="preview-sec">
+          <div class="sec-title">${I('pencil', 14, 'c-warn')} 文法修正 <span class="cnt">${data.grammar.length}</span></div>
+          <div id="grammar-list">
+            ${data.grammar.map((g, i) => `<div class="edit-row grammar-row" data-idx="${i}" data-type="grammar">
+              <div class="grammar-inputs">
+                <input class="edit-wrong" placeholder="❌ 錯誤句" value="${esc(g.wrong)}">
+                <input class="edit-correct" placeholder="✔️ 修正句" value="${esc(g.correct)}">
+              </div>
+              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
+            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+          </div>
+          <button class="btn sm" id="add-grammar">${I('plus', 13)} 加文法</button>
+        </div>
+
+        <div class="preview-sec">
+          <div class="sec-title">${I('megaphone', 14, 'c-acc2')} 發音 <span class="cnt">${data.pron.length}</span></div>
+          <div id="pron-list">
+            ${data.pron.map((p, i) => `<div class="edit-row" data-idx="${i}" data-type="pron">
+              <input class="edit-word" placeholder="單字" value="${esc(p.word)}">
+              <input class="edit-def" placeholder="音標/提示" value="${esc(p.guide)}">
+              <button class="iconbtn del-row" title="刪除">${I('trash', 14)}</button>
+            </div>`).join('') || '<div class="pv-item faint" style="margin-bottom:6px">無</div>'}
+          </div>
+          <button class="btn sm" id="add-pron">${I('plus', 13)} 加發音</button>
+        </div>
+
+        <div class="preview-sec">
+          <div class="sec-title">${I('message-circle', 14)} 老師回饋</div>
+          <textarea id="edit-feedback" class="edit-feedback-area">${esc(data.feedback || '')}</textarea>
+        </div>
+
+        <button class="btn primary block lg" id="save-btn" ${total === 0 && !data.feedback ? 'disabled' : ''}>${I('save', 16)} 儲存這堂課(+30 XP)</button>
+      </div>`;
+
+      if (scrollInto) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      $$('.del-row', el).forEach((btn) => btn.addEventListener('click', () => {
+        readDOM();
+        const row = btn.closest('[data-idx]');
+        data[row.dataset.type].splice(+row.dataset.idx, 1);
+        render(false);
+      }));
+      $('#add-vocab', el).addEventListener('click', () => { readDOM(); data.vocab.push({ word: '', def: '' }); render(false); });
+      $('#add-grammar', el).addEventListener('click', () => { readDOM(); data.grammar.push({ wrong: '', correct: '' }); render(false); });
+      $('#add-pron', el).addEventListener('click', () => { readDOM(); data.pron.push({ word: '', guide: '' }); render(false); });
+
+      $('#save-btn', el)?.addEventListener('click', () => {
+        readDOM();
+        data.vocab = data.vocab.filter((v) => v.word.trim());
+        data.grammar = data.grammar.filter((g) => g.correct.trim());
+        data.pron = data.pron.filter((p) => p.word.trim());
+        const date = dateInput.value || SRS.todayStr();
+        const { lesson, newAch } = Store.addLesson(date, data);
+        App.toast('✅ 已儲存!+30 XP');
+        newAch.forEach((a) => App.achToast(a));
+        location.hash = `#/lesson/${lesson.id}`;
+      });
+    }
+
+    render(true);
   }
 
   /* ============================================================
