@@ -319,7 +319,12 @@ You did a wonderful job expressing your opinions today!`;
 
         <div class="preview-sec">
           <div class="sec-title">${I('user', 14)} 老師</div>
-          <input id="edit-teacher" placeholder="老師名字" value="${esc(data.teacher || '')}">
+          <div class="edit-item">
+            <div class="edit-item-f grow">
+              <span class="edit-lbl">老師名字</span>
+              <input id="edit-teacher" placeholder="e.g. Teacher Mae" value="${esc(data.teacher || '')}">
+            </div>
+          </div>
         </div>
 
         <div class="preview-sec">
@@ -348,7 +353,12 @@ You did a wonderful job expressing your opinions today!`;
 
         <div class="preview-sec" style="margin-bottom:20px">
           <div class="sec-title">${I('message-circle', 14)} 老師回饋</div>
-          <textarea id="edit-feedback" style="min-height:90px;font-size:14px">${esc(data.feedback || '')}</textarea>
+          <div class="edit-item" style="align-items:flex-start">
+            <div class="edit-item-f grow">
+              <span class="edit-lbl">回饋內容</span>
+              <textarea id="edit-feedback" class="edit-item-textarea">${esc(data.feedback || '')}</textarea>
+            </div>
+          </div>
         </div>
 
         <button class="btn primary block lg" id="save-btn" ${total === 0 && !data.feedback ? 'disabled' : ''}>${I('save', 16)} 儲存這堂課(+30 XP)</button>

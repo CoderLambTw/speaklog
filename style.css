@@ -863,6 +863,16 @@ kbd {
 .edit-del:hover { opacity: 1; color: var(--bad) !important; border-color: transparent !important; }
 .edit-add-btn { color: var(--text-dim); border-color: transparent; margin-top: 2px; }
 .edit-add-btn:hover { color: var(--accent); border-color: var(--line-strong) !important; background: var(--info-bg) !important; }
+.edit-item-textarea {
+  background: transparent !important; border: none !important;
+  border-bottom: 1.5px solid var(--line-strong) !important;
+  border-radius: 0 !important; padding: 4px 0 !important;
+  font-size: 13.5px !important; color: var(--text) !important;
+  box-shadow: none !important; width: 100%; min-height: 72px; resize: vertical;
+}
+.edit-item-textarea:focus {
+  border-bottom-color: var(--accent) !important; box-shadow: none !important; outline: none !important;
+}
 @media (max-width: 480px) { .edit-item-f[style*="140px"] { flex: 0 0 100px !important; } }
 
 /* ---------- Misc ---------- */
